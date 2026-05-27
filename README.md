@@ -1,98 +1,111 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img src="https://raw.githubusercontent.com/KolisCode/lotesRB/master/screenshots/readme-banner.png" alt="KolisCode Banner" width="100%"/>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# TiendaKit — API
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![MercadoPago](https://img.shields.io/badge/MercadoPago-SDK-009EE3?logo=mercadopago&logoColor=white)
 
-## Description
+> Backend del e-commerce TiendaKit. **Frontend:** [tiendakit-frontend](https://github.com/KolisCode/tiendakit-frontend)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+REST API para una tienda online genérica con catálogo de productos, checkout real con MercadoPago y panel admin completo.
 
-## Project setup
+## Stack
 
-```bash
-$ npm install
-```
+- **NestJS 11** — módulos, guards, pipes, throttler
+- **Prisma 7** — ORM con adaptador PostgreSQL nativo
+- **PostgreSQL** — base de datos relacional
+- **MercadoPago SDK v3** — preferencias de pago y webhooks
+- **JWT + Passport** — autenticación del panel admin
+- **Multer** — upload de imágenes de productos
+- **bcrypt** — hash seguro de contraseñas
 
-## Compile and run the project
+## Requisitos
+
+- Node.js 20+
+- PostgreSQL corriendo
+
+## Instalación
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+## Variables de entorno
+
+Crear `.env` en la raíz:
+
+```env
+DATABASE_URL="postgresql://dev:dev1234@localhost:5432/tiendakit?schema=public"
+JWT_SECRET="secreto-aleatorio-minimo-32-chars"
+PORT=3002
+CORS_ORIGINS="http://localhost:3000"
+MP_ACCESS_TOKEN="TEST-xxxx-tu-access-token-de-mercadopago"
+SEED_ADMIN_EMAIL="admin@tiendakit.com"
+SEED_ADMIN_NOMBRE="Administrador"
+SEED_ADMIN_PASSWORD="contraseña-segura"
+```
+
+> Obtén tu `MP_ACCESS_TOKEN` en [mercadopago.com/developers](https://mercadopago.com.co/developers).
+
+## Base de datos
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx prisma migrate dev
+npm run seed
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Desarrollo
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run start:dev    # http://localhost:3002/api
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## Estructura
 
-Check out a few resources that may come in handy when working with NestJS:
+```
+src/
+├── main.ts                # Bootstrap: helmet, CORS, ValidationPipe
+├── prisma/                # PrismaService con @prisma/adapter-pg
+├── auth/                  # POST /api/auth/login — JWT, bcrypt, timing-safe
+├── productos/             # CRUD /api/productos — filtros categoría y precio
+├── categorias/            # CRUD /api/categorias
+├── ordenes/               # Crear orden → preferencia MP → webhook
+└── upload/                # POST /api/upload/imagen — multer, JWT
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## Flujo MercadoPago
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. Cliente POST `/api/ordenes` con datos del comprador e items
+2. API crea la `Orden` en BD y genera una Preferencia en MercadoPago
+3. Respuesta incluye `initPoint` — la URL de pago de MP
+4. Cliente es redirigido a MercadoPago
+5. MP llama al webhook `/api/ordenes/webhook` al completarse
+6. API actualiza estado de la orden y descuenta stock
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Endpoints principales
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| `GET` | `/api/productos` | No | Lista con filtros `?categoria=&minPrecio=&maxPrecio=` |
+| `GET` | `/api/productos/:slug` | No | Detalle de producto |
+| `GET` | `/api/categorias` | No | Lista categorías |
+| `POST` | `/api/ordenes` | No | Crear orden → `{ orden, initPoint }` |
+| `POST` | `/api/ordenes/webhook` | No | Webhook MercadoPago |
+| `POST` | `/api/auth/login` | — | Login admin → `{ access_token }` |
+| `POST` | `/api/productos` | JWT | Crear producto |
+| `PUT` | `/api/productos/:id` | JWT | Actualizar producto |
+| `DELETE` | `/api/productos/:id` | JWT | Eliminar producto |
+| `GET` | `/api/ordenes` | JWT | Listar órdenes |
+| `PATCH` | `/api/ordenes/:id/estado` | JWT | Cambiar estado |
+| `POST` | `/api/upload/imagen` | JWT | Subir imagen |
