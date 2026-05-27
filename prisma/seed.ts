@@ -31,18 +31,58 @@ async function main() {
   });
 
   const productos = [
-    { nombre: 'Camiseta Premium', slug: 'camiseta-premium', precio: 45000, stock: 50, categoriaId: ropa.id, descripcion: 'Camiseta 100% algodón, corte moderno.' },
-    { nombre: 'Jean Slim Fit', slug: 'jean-slim-fit', precio: 89000, stock: 30, categoriaId: ropa.id, descripcion: 'Jean de alta calidad, entallado.' },
-    { nombre: 'Buzo Oversize', slug: 'buzo-oversize', precio: 65000, stock: 20, categoriaId: ropa.id, descripcion: 'Buzo cómodo de tendencia.' },
-    { nombre: 'Gorra Snapback', slug: 'gorra-snapback', precio: 35000, stock: 40, categoriaId: accesorios.id, descripcion: 'Gorra ajustable snapback.' },
-    { nombre: 'Bolso Tote', slug: 'bolso-tote', precio: 55000, stock: 25, categoriaId: accesorios.id, descripcion: 'Bolso de lona resistente.' },
+    {
+      nombre: 'Camiseta Premium',
+      slug: 'camiseta-premium',
+      precio: 45000,
+      stock: 50,
+      categoriaId: ropa.id,
+      descripcion: 'Camiseta 100% algodón, corte moderno. Perfecta para el día a día.',
+      imagenes: ['/productos/camiseta-premium.jpg'],
+    },
+    {
+      nombre: 'Jean Slim Fit',
+      slug: 'jean-slim-fit',
+      precio: 89000,
+      stock: 30,
+      categoriaId: ropa.id,
+      descripcion: 'Jean de alta calidad con corte entallado. Diseño distressed de tendencia.',
+      imagenes: ['/productos/jean-slim-fit.jpg'],
+    },
+    {
+      nombre: 'Buzo Oversize',
+      slug: 'buzo-oversize',
+      precio: 65000,
+      stock: 20,
+      categoriaId: ropa.id,
+      descripcion: 'Buzo oversize con caída amplia. Comodidad y estilo en un solo look.',
+      imagenes: ['/productos/buzo-oversize.jpg'],
+    },
+    {
+      nombre: 'Gorra Snapback',
+      slug: 'gorra-snapback',
+      precio: 35000,
+      stock: 40,
+      categoriaId: accesorios.id,
+      descripcion: 'Gorra snapback ajustable. Cierre trasero regulable, talla única.',
+      imagenes: ['/productos/gorra-snapback.jpg'],
+    },
+    {
+      nombre: 'Bolso Tote',
+      slug: 'bolso-tote',
+      precio: 55000,
+      stock: 25,
+      categoriaId: accesorios.id,
+      descripcion: 'Bolso de cuero resistente con detalles dorados. Ideal para el día a día.',
+      imagenes: ['/productos/bolso-tote.jpg', '/productos/bolso-tote-2.jpg'],
+    },
   ];
 
-  for (const p of productos) {
+  for (const { categoriaId, ...data } of productos) {
     await prisma.producto.upsert({
-      where: { slug: p.slug },
-      update: {},
-      create: p,
+      where: { slug: data.slug },
+      update: { imagenes: data.imagenes, descripcion: data.descripcion },
+      create: { ...data, categoria: { connect: { id: categoriaId } } },
     });
   }
 
