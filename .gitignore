@@ -4,3 +4,4 @@ dist/
 /generated/
 uploads/
 .DS_Store
+.claude
