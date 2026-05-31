@@ -23,40 +23,30 @@ fi
 
 log "=== Deploy tiendakit-api iniciado ==="
 
-log "[1/5] Push a origin/master..."
+log "[1/4] Push a origin/master..."
 git -C "$SCRIPT_DIR" push origin master
 log "      push OK"
 
-log "[2/5] Build local (nest build)..."
-cd "$SCRIPT_DIR"
-npm run build
-log "      build OK"
-
-log "[3/5] rsync al droplet..."
+log "[2/4] git pull + npm install + build en el droplet..."
+PREV_HASH=$(ssh "$REMOTE_HOST" "cd $REMOTE_PATH && git rev-parse --short HEAD 2>/dev/null || echo unknown")
 ssh "$REMOTE_HOST" "
-  if [ -d $REMOTE_PATH/dist ]; then
-    rm -rf $REMOTE_PATH/dist.bak
-    cp -r $REMOTE_PATH/dist $REMOTE_PATH/dist.bak
-  fi
+  cd $REMOTE_PATH
+  git pull origin master
+  npm install --omit=dev
+  npm run build
+  npx prisma migrate deploy
 "
-rsync -az --delete "$SCRIPT_DIR/dist/"       "$REMOTE_HOST:$REMOTE_PATH/dist/"
-rsync -az           "$SCRIPT_DIR/package.json" "$SCRIPT_DIR/package-lock.json" "$REMOTE_HOST:$REMOTE_PATH/"
-rsync -az --delete --exclude='seed.ts' "$SCRIPT_DIR/prisma/" "$REMOTE_HOST:$REMOTE_PATH/prisma/"
-log "      rsync OK"
+log "      build y migraciones OK"
 
-log "[4/5] npm install + prisma migrate deploy..."
-ssh "$REMOTE_HOST" "cd $REMOTE_PATH && npm install --omit=dev && npx prisma migrate deploy"
-log "      dependencias y migraciones OK"
-
-log "[5/5] pm2 restart $PM2_NAME..."
+log "[3/4] pm2 restart $PM2_NAME..."
 ssh "$REMOTE_HOST" "pm2 restart $PM2_NAME"
 
-log "      Health check en puerto $PORT..."
+log "[4/4] Health check en puerto $PORT..."
 for i in {1..6}; do
   sleep 5
   HTTP_CODE=$(ssh "$REMOTE_HOST" "curl -s -o /dev/null -w '%{http_code}' --connect-timeout 3 http://localhost:$PORT/ 2>/dev/null" || echo "000")
   if [ "$HTTP_CODE" != "000" ] && [ "$HTTP_CODE" != "" ]; then
-    COMMIT=$(git -C "$SCRIPT_DIR" rev-parse --short HEAD)
+    COMMIT=$(ssh "$REMOTE_HOST" "cd $REMOTE_PATH && git rev-parse --short HEAD 2>/dev/null || echo unknown")
     ssh "$REMOTE_HOST" "echo \"\$(date) Deploy OK — $COMMIT\" >> $LOG_FILE" 2>/dev/null || true
     log "      HTTP $HTTP_CODE — OK"
     log "=== Deploy completado ($COMMIT) ==="
@@ -65,13 +55,7 @@ for i in {1..6}; do
   log "      Intento $i/6 — esperando..."
 done
 
-log "[ROLLBACK] Servicio no responde — restaurando dist.bak..."
-ssh "$REMOTE_HOST" "
-  if [ -d $REMOTE_PATH/dist.bak ]; then
-    rm -rf $REMOTE_PATH/dist && mv $REMOTE_PATH/dist.bak $REMOTE_PATH/dist
-    pm2 restart $PM2_NAME
-    echo \"\$(date) Deploy FALLIDO — rollback automático\" >> $LOG_FILE
-  fi
-" 2>/dev/null || true
+log "[ROLLBACK] Servicio no responde — volviendo a $PREV_HASH..."
+ssh "$REMOTE_HOST" "cd $REMOTE_PATH && git checkout $PREV_HASH && npm run build && pm2 restart $PM2_NAME && echo \"\$(date) Deploy FALLIDO — rollback a $PREV_HASH\" >> $LOG_FILE" 2>/dev/null || true
 echo "ERROR: Deploy fallido. Rollback ejecutado."
 exit 1
