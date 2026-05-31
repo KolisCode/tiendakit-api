@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, IsArray, Min, IsInt } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsBoolean, IsArray, Min, IsInt, ArrayMaxSize } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateProductoDto {
@@ -28,6 +28,8 @@ export class CreateProductoDto {
 
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(10)
   imagenes?: string[];
 
   @IsOptional()
@@ -67,6 +69,8 @@ export class UpdateProductoDto {
 
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(10)
   imagenes?: string[];
 
   @IsOptional()

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductoDto, UpdateProductoDto } from './productos.dto';
 
@@ -6,10 +6,10 @@ import { CreateProductoDto, UpdateProductoDto } from './productos.dto';
 export class ProductosService {
   constructor(private prisma: PrismaService) {}
 
-  findAll(categoriaSlug?: string, minPrecio?: number, maxPrecio?: number) {
+  findAll(categoriaSlug?: string, minPrecio?: number, maxPrecio?: number, incluirInactivos = false) {
     return this.prisma.producto.findMany({
       where: {
-        activo: true,
+        ...(!incluirInactivos && { activo: true }),
         ...(categoriaSlug && { categoria: { slug: categoriaSlug } }),
         ...(minPrecio !== undefined && { precio: { gte: minPrecio } }),
         ...(maxPrecio !== undefined && { precio: { lte: maxPrecio } }),
@@ -21,7 +21,7 @@ export class ProductosService {
 
   async findOne(slug: string) {
     const producto = await this.prisma.producto.findUnique({
-      where: { slug },
+      where: { slug, activo: true },
       include: { categoria: true },
     });
     if (!producto) throw new NotFoundException('Producto no encontrado');
@@ -37,29 +37,46 @@ export class ProductosService {
     return producto;
   }
 
-  create(dto: CreateProductoDto) {
+  async create(dto: CreateProductoDto) {
     const { categoriaId, ...data } = dto;
-    return this.prisma.producto.create({
-      data: { ...data, categoria: { connect: { id: categoriaId } } },
-      include: { categoria: true },
-    });
+    try {
+      return await this.prisma.producto.create({
+        data: { ...data, categoria: { connect: { id: categoriaId } } },
+        include: { categoria: true },
+      });
+    } catch (e: any) {
+      if (e?.code === 'P2002') throw new ConflictException('Ya existe un producto con ese slug');
+      throw e;
+    }
   }
 
   async update(id: number, dto: UpdateProductoDto) {
     await this.findById(id);
     const { categoriaId, ...data } = dto;
-    return this.prisma.producto.update({
-      where: { id },
-      data: {
-        ...data,
-        ...(categoriaId && { categoria: { connect: { id: categoriaId } } }),
-      },
-      include: { categoria: true },
-    });
+    try {
+      return await this.prisma.producto.update({
+        where: { id },
+        data: {
+          ...data,
+          ...(categoriaId && { categoria: { connect: { id: categoriaId } } }),
+        },
+        include: { categoria: true },
+      });
+    } catch (e: any) {
+      if (e?.code === 'P2002') throw new ConflictException('Ya existe un producto con ese slug');
+      throw e;
+    }
   }
 
   async remove(id: number) {
     await this.findById(id);
-    return this.prisma.producto.delete({ where: { id } });
+    try {
+      return await this.prisma.producto.delete({ where: { id } });
+    } catch (e: any) {
+      if (e?.code === 'P2003' || e?.code === 'P2014') {
+        throw new ConflictException('No se puede eliminar: el producto tiene órdenes asociadas');
+      }
+      throw e;
+    }
   }
 }

@@ -14,12 +14,20 @@ export class ProductosController {
     @Query('categoria') categoria?: string,
     @Query('minPrecio') minPrecio?: string,
     @Query('maxPrecio') maxPrecio?: string,
+    @Query('incluirInactivos') incluirInactivos?: string,
   ) {
     return this.service.findAll(
       categoria,
       minPrecio ? Number(minPrecio) : undefined,
       maxPrecio ? Number(maxPrecio) : undefined,
+      incluirInactivos === 'true',
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('by-id/:id')
+  findById(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findById(id);
   }
 
   @Get(':slug')

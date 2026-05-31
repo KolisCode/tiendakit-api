@@ -33,7 +33,8 @@ export class UploadController {
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
-  subirImagen(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
+  subirImagen(@UploadedFile() file: Express.Multer.File | undefined, @Req() req: Request) {
+    if (!file) throw new BadRequestException('Se requiere un archivo de imagen');
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     return { url: `${baseUrl}/uploads/${file.filename}` };
   }

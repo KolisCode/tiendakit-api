@@ -1,9 +1,10 @@
 import {
-  Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, Req, UseGuards,
+  Body, Controller, Get, Headers, HttpCode, Param, ParseIntPipe, Patch, Post, Query, Req, UseGuards,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { OrdenesService } from './ordenes.service';
-import { CreateOrdenDto, WebhookMpDto } from './ordenes.dto';
+import { ActualizarEstadoDto, CreateOrdenDto, WebhookMpDto } from './ordenes.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('ordenes')
@@ -16,9 +17,15 @@ export class OrdenesController {
     return this.service.crear(dto, baseUrl);
   }
 
+  @SkipThrottle()
   @Post('webhook')
-  webhook(@Body() body: WebhookMpDto) {
-    return this.service.procesarWebhook(body.type, body.data?.id);
+  @HttpCode(200)
+  webhook(
+    @Body() body: WebhookMpDto,
+    @Headers('x-signature') xSignature?: string,
+  ) {
+    if (!this.service.verificarFirmaWebhook(body.data?.id, xSignature)) return;
+    return this.service.procesarWebhook(body.type ?? '', body.data?.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -43,8 +50,8 @@ export class OrdenesController {
   @Patch(':id/estado')
   actualizarEstado(
     @Param('id', ParseIntPipe) id: number,
-    @Body('estado') estado: string,
+    @Body() dto: ActualizarEstadoDto,
   ) {
-    return this.service.actualizarEstado(id, estado);
+    return this.service.actualizarEstado(id, dto.estado);
   }
 }

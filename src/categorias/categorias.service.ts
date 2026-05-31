@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateCategoriaDto } from './categorias.dto';
+import { CreateCategoriaDto, UpdateCategoriaDto } from './categorias.dto';
 
 @Injectable()
 export class CategoriasService {
@@ -10,11 +10,32 @@ export class CategoriasService {
     return this.prisma.categoria.findMany({ orderBy: { nombre: 'asc' } });
   }
 
-  create(dto: CreateCategoriaDto) {
-    return this.prisma.categoria.create({ data: dto });
+  async create(dto: CreateCategoriaDto) {
+    try {
+      return await this.prisma.categoria.create({ data: dto });
+    } catch (e: any) {
+      if (e?.code === 'P2002') throw new ConflictException('Ya existe una categoría con ese nombre o slug');
+      throw e;
+    }
   }
 
-  remove(id: number) {
-    return this.prisma.categoria.delete({ where: { id } });
+  async update(id: number, dto: UpdateCategoriaDto) {
+    try {
+      return await this.prisma.categoria.update({ where: { id }, data: dto });
+    } catch (e: any) {
+      if (e?.code === 'P2002') throw new ConflictException('Ya existe una categoría con ese nombre o slug');
+      throw e;
+    }
+  }
+
+  async remove(id: number) {
+    try {
+      return await this.prisma.categoria.delete({ where: { id } });
+    } catch (e: any) {
+      if (e?.code === 'P2003' || e?.code === 'P2014') {
+        throw new ConflictException('No se puede eliminar: la categoría tiene productos asociados');
+      }
+      throw e;
+    }
   }
 }

@@ -6,7 +6,12 @@ import helmet from 'helmet';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
+const REQUIRED_ENV = ['JWT_SECRET', 'DATABASE_URL'] as const;
+
 async function bootstrap() {
+  const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+  if (missing.length) throw new Error(`Variables de entorno faltantes: ${missing.join(', ')}`);
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(helmet());
