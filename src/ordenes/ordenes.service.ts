@@ -52,7 +52,7 @@ export class OrdenesService {
           })),
         },
       },
-      include: { items: { include: { producto: true } } },
+      include: { items: { include: { producto: { include: { categoria: true } } } } },
     });
 
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
@@ -144,7 +144,7 @@ export class OrdenesService {
   findAll(soloNoPagadas?: boolean) {
     return this.prisma.orden.findMany({
       where: soloNoPagadas ? { estado: 'PENDIENTE' } : undefined,
-      include: { items: { include: { producto: true } } },
+      include: { items: { include: { producto: { include: { categoria: true } } } } },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -152,7 +152,7 @@ export class OrdenesService {
   async findOne(id: number) {
     const orden = await this.prisma.orden.findUnique({
       where: { id },
-      include: { items: { include: { producto: true } } },
+      include: { items: { include: { producto: { include: { categoria: true } } } } },
     });
     if (!orden) throw new NotFoundException('Orden no encontrada');
     return orden;

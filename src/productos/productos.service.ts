@@ -23,8 +23,12 @@ export class ProductosService {
       where: {
         ...(!incluirInactivos && { activo: true }),
         ...(categoriaSlug && { categoria: { slug: categoriaSlug } }),
-        ...(minPrecio !== undefined && { precio: { gte: minPrecio } }),
-        ...(maxPrecio !== undefined && { precio: { lte: maxPrecio } }),
+        ...((minPrecio !== undefined || maxPrecio !== undefined) && {
+          precio: {
+            ...(minPrecio !== undefined && { gte: minPrecio }),
+            ...(maxPrecio !== undefined && { lte: maxPrecio }),
+          },
+        }),
         ...(q && {
           OR: [
             { nombre:      { contains: q, mode: 'insensitive' } },
