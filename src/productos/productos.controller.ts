@@ -15,12 +15,16 @@ export class ProductosController {
     @Query('minPrecio') minPrecio?: string,
     @Query('maxPrecio') maxPrecio?: string,
     @Query('incluirInactivos') incluirInactivos?: string,
+    @Query('q') q?: string,
+    @Query('sort') sort?: string,
   ) {
     return this.service.findAll(
       categoria,
       minPrecio ? Number(minPrecio) : undefined,
       maxPrecio ? Number(maxPrecio) : undefined,
       incluirInactivos === 'true',
+      q?.trim() || undefined,
+      sort,
     );
   }
 

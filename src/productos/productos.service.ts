@@ -6,16 +6,34 @@ import { CreateProductoDto, UpdateProductoDto } from './productos.dto';
 export class ProductosService {
   constructor(private prisma: PrismaService) {}
 
-  findAll(categoriaSlug?: string, minPrecio?: number, maxPrecio?: number, incluirInactivos = false) {
+  findAll(
+    categoriaSlug?: string,
+    minPrecio?: number,
+    maxPrecio?: number,
+    incluirInactivos = false,
+    q?: string,
+    sort?: string,
+  ) {
+    const orderBy: any =
+      sort === 'precio_asc'  ? { precio: 'asc' }  :
+      sort === 'precio_desc' ? { precio: 'desc' } :
+      { createdAt: 'desc' };
+
     return this.prisma.producto.findMany({
       where: {
         ...(!incluirInactivos && { activo: true }),
         ...(categoriaSlug && { categoria: { slug: categoriaSlug } }),
         ...(minPrecio !== undefined && { precio: { gte: minPrecio } }),
         ...(maxPrecio !== undefined && { precio: { lte: maxPrecio } }),
+        ...(q && {
+          OR: [
+            { nombre:      { contains: q, mode: 'insensitive' } },
+            { descripcion: { contains: q, mode: 'insensitive' } },
+          ],
+        }),
       },
       include: { categoria: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy,
     });
   }
 
