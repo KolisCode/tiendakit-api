@@ -32,7 +32,7 @@ PREV_HASH=$(ssh "$REMOTE_HOST" "cd $REMOTE_PATH && git rev-parse --short HEAD 2>
 ssh "$REMOTE_HOST" "
   cd $REMOTE_PATH
   git pull origin master
-  npm install --omit=dev
+  npm install
   npm run build
   npx prisma migrate deploy
 "
